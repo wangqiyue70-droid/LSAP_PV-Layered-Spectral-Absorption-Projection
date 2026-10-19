@@ -2,6 +2,10 @@
 *LSAP-PV: High-Fidelity Palm Vein Image Synthesis via Layered Spectral Absorption Projection-Guided Diffusion Model*
 | [Paper](https://ojs.aaai.org/index.php/AAAI/article/view/37837)
 
+## Single-GPU smoke run / 单卡最小试跑
+
+See [RUN_SINGLE_GPU.md](RUN_SINGLE_GPU.md) for the original pretrained pipeline with one condition image, `batch_size=1`, and one generated image.
+
 ## Prerequisites
 - Python 3
 - NVIDIA GPU + CUDA CuDNN

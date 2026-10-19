@@ -299,7 +299,7 @@ if __name__ == '__main__':
     for p in range(args.nproc):
         argins.append([p, ranges, args, imagenet_images])
 
-    with Pool() as pool:
+    with Pool(processes=args.nproc) as pool:
         pool.starmap(batch_process, argins)
 
     print('generate over')
