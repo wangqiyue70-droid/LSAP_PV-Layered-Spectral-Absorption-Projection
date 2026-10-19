@@ -6,6 +6,25 @@
 
 See [RUN_SINGLE_GPU.md](RUN_SINGLE_GPU.md) for the original pretrained pipeline with one condition image, `batch_size=1`, and one generated image.
 
+## Conditional Flow and DINO / 条件 Flow 与 DINO
+
+新增纯条件 Flow Matching 训练、恢复和少步欧拉采样，并支持冻结的官方 DINOv2 教师、局部特征预测与自条件反馈。运行方式见 [FLOW_README.md](FLOW_README.md) 和 [DINO_README.md](DINO_README.md)。当前只完成模拟数据的软件验证，尚未进行真实掌静脉数据训练。
+
+Windows 环境安装、下载、启动脚本和本地研究说明统一保存在 [local_workspace/](local_workspace/README.md)。这些脚本按工作区布局使用：仓库目录名为 `LSAP-PV`，`.venv`、`.downloads` 和启动脚本位于仓库上一级。新电脑可在 PowerShell 中执行：
+
+```powershell
+New-Item -ItemType Directory -Path palm-workspace
+Set-Location palm-workspace
+git clone --branch codex/lsap-single-gpu-smoke https://github.com/wangqiyue70-droid/LSAP_PV-Layered-Spectral-Absorption-Projection.git LSAP-PV
+Copy-Item -Path .\LSAP-PV\local_workspace\* -Destination . -Recurse -Force
+.\setup_local.ps1
+.\run_flow_smoke.ps1
+.\setup_dino.ps1
+.\run_dino_smoke.ps1
+```
+
+恢复脚本只需在新工作区复制一次；已有工作区应先核对同名文件，再选择是否覆盖。`setup_local.ps1` 面向 Windows x64、Python 3.12 和 NVIDIA CUDA 环境，包含原版 Diffusion 权重下载；仅使用 Flow 的其他环境可按 Flow 文档自行配置。权重、虚拟环境、下载缓存及生成结果不随源码提交。
+
 ## Prerequisites
 - Python 3
 - NVIDIA GPU + CUDA CuDNN

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.downloads/
+checkpoint/
+smoke_conditions*/
+results_smoke/
+logs/
+runs/
+results_flow/

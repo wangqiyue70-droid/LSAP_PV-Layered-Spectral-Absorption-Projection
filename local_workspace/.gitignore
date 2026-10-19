@@ -1,0 +1,8 @@
+.venv/
+.downloads/
+LSAP-PV/
+research/context/*.html
+research/context/*.json
+research/context/script_*.txt
+research/context/shared_conversation.txt
+__pycache__/

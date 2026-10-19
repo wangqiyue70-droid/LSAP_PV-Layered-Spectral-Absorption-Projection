@@ -6,6 +6,7 @@ from torchvision import transforms
 from tqdm import tqdm
 from args import parse_args
 import random
+import time
 
 def blend(vein_path,palm_path, newpath):
     img1 = cv2.imread(vein_path)
@@ -59,9 +60,9 @@ def aug(path, newpath):
         for imgs in os.listdir(idp):
             imgp = os.path.join(idp, imgs)
             nimgp = os.path.join(nidp, imgs)
-            img = Image.open(imgp)
-            sam = transfor(img)
-            sam.save(nimgp)
+            with Image.open(imgp) as img:
+                sam = transfor(img)
+                sam.save(nimgp)
 
 def era_aug(path, newpath, sams):
 
@@ -75,15 +76,15 @@ def era(imgpath, newpath, sams=20):
         transforms.RandomErasing(p=0.9, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=1),
         transforms.ToPILImage(), 
     ])
-    img = Image.open(imgpath)
-    ids = imgpath.split('/')[-1].split('.')[0] 
+    ids = os.path.splitext(os.path.basename(imgpath))[0]
     subpath = os.path.join(newpath, ids)
     os.makedirs(subpath, exist_ok=True)
 
-    for i in range(sams):
-        newimgpath = os.path.join(subpath, ids+'_sample'+'{}.png'.format(i))
-        sam = transfor2(img)
-        sam.save(newimgpath)
+    with Image.open(imgpath) as img:
+        for i in range(sams):
+            newimgpath = os.path.join(subpath, ids+'_sample'+'{}.png'.format(i))
+            sam = transfor2(img)
+            sam.save(newimgpath)
 
 def cvt(p):
     for img in os.listdir(p):
@@ -103,7 +104,15 @@ def ChangeIDName(p):
         idpath = os.path.join(p, ids)
         sty = random.choice([0, 1, 2, 3])
         nidpath = os.path.join(p, ids + f"_{sty}")
-        os.rename(idpath, nidpath)   
+        # Windows can briefly retain a handle after saving a new image.
+        for attempt in range(6):
+            try:
+                os.rename(idpath, nidpath)
+                break
+            except PermissionError:
+                if os.name != 'nt' or attempt == 5:
+                    raise
+                time.sleep(0.1 * 2 ** attempt)
 
 if __name__ == '__main__':
 

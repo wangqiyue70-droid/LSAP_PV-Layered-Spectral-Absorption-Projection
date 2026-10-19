@@ -2,7 +2,7 @@
 
 目标是跑通原版推理链路：**原版静脉树与 LSAP 投影 → 原版预处理 → 原版预训练条件扩散模型 → 1 张掌静脉图像**。不训练模型，不引入 Flow 或 DINO。
 
-新增入口使用单卡、`batch_size=1`、128×128 灰度图、FP32 和原版完整 1000 步 DDPM。网络、权重格式、cosine 噪声调度和条件输入与原仓库采样配置保持一致。不会为节约显存改变网络宽度或分辨率。
+新增入口使用单卡、`batch_size=1`、128×128 灰度图、FP32。默认以 20 步重采样 DDPM 快速验证代码；通过 `--steps 1000` 可运行原版完整采样。网络、权重格式、基础 1000 步 cosine 噪声调度和条件输入与原仓库采样配置保持一致。20 步模式使用仓库已有的 SpacedDiffusion 重新选取时间点并计算转移，快速出图不用于质量评估。
 
 ## 1. 环境
 
@@ -52,7 +52,7 @@ python generate_condition_single.py
 python sample_single.py --model_path checkpoint/vein_sty_concat_sigma_cosine_vpem/ema_0.9999_070000.pt --cond_path smoke_conditions/pv_pattern_results/palmvein --batch_size 1
 ```
 
-入口会递归选择条件目录中排序后的第一张图片，自动读取其直接父目录的风格标签，显示 1000 步采样进度，保存 `results_smoke/sample.png`。输出是 128×128 灰度 PNG。采样结束会报告 PyTorch 的显存分配峰值；它不等于进程全部显存占用。
+入口会递归选择条件目录中排序后的第一张图片，自动读取其直接父目录的风格标签，默认显示 20 步采样进度，保存 `results_smoke/sample.png` 及同名 JSON 运行记录。输出是 128×128 灰度 PNG。采样结束会报告耗时与 PyTorch 的显存分配峰值；它不等于进程全部显存占用。完整采样可加 `--steps 1000`。
 
 也可以直接指定一张条件图，并明确选择风格：
 
@@ -62,14 +62,14 @@ python sample_single.py --model_path /path/to/ema_0.9999_070000.pt --cond_path /
 
 风格对应原训练代码：`0=casia`、`1=HFUT`、`2=polyu`、`3=TongJi`。输入应是原 LSAP/预处理得到的条件图，不是任意真实照片。自定义路径含空格时，请用双引号包住路径。
 
-默认设备为 `cuda:0`；可用 `--device cuda:1` 选择另一张可见 GPU。CPU 仅用于排查，可加 `--device cpu`，完整 1000 步可能很慢。再次生成请指定不同的 `--output`，脚本不会覆盖已有图片。
+默认设备为 `cuda:0`；可用 `--device cuda:1` 选择另一张可见 GPU。CPU 仅用于排查，可加 `--device cpu`，完整 1000 步可能很慢。步数可通过 `--steps` 设置为 2 到 1000，默认 20。再次生成请指定不同的 `--output`，脚本不会覆盖已有图片。
 
 ## 怎样判断跑通
 
 1. 条件生成命令输出 `Condition ready`，条件图能正常打开。
 2. 模型权重严格加载成功，无 missing/unexpected keys 或尺寸不匹配。
-3. 1000 步完成，输出 `Saved`，`results_smoke/sample.png` 能正常打开。
+3. 指定的采样步数完成，输出 `Saved`，`results_smoke/sample.png` 能正常打开。
 
-这验证的是原版预训练模型的生成链路，不代表训练链路、FID 或识别性能已经复现。`batch_size=1` 降低单次采样的激活显存需求，但不降低模型权重占用，也不缩短 1000 步的长度；所需显存和时间需在实际机器上测量。
+这验证的是原版预训练模型的生成链路，不代表训练链路、FID 或识别性能已经复现。`batch_size=1` 降低单次采样的激活显存需求，`--steps 20` 降低网络调用次数；模型权重占用不变，所需显存和时间需在实际机器上测量。
 
 若报错，请保留完整 traceback，并附上第一步的环境检查输出。缺文件、CUDA 不可用、输出路径已存在会在采样前提示；checkpoint 尺寸不匹配时应先核实权重来源，不要修改网络配置来强行加载。
